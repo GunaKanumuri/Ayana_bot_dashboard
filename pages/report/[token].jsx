@@ -17,11 +17,17 @@ import { useEffect, useState, useCallback } from "react";
 import Head from "next/head";
 import { createClient } from "@supabase/supabase-js";
 
-// ─── Supabase client (anon key — only reads family data via token) ────────────
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+// ─── Supabase client (lazy — avoids crash during build when env vars missing) ─
+let _supabase = null;
+function getSupabase() {
+  if (!_supabase && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
+  }
+  return _supabase;
+}
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
 function decodeToken(token) {
@@ -81,7 +87,7 @@ export default function ReportPage({ params }) {
   useEffect(() => {
     if (!payload) return;
     (async () => {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from("parents")
         .select("id, nickname, language, checkin_time")
         .eq("family_id", payload.family_id)
@@ -101,14 +107,14 @@ export default function ReportPage({ params }) {
     const today = payload.date || new Date().toISOString().slice(0, 10);
 
     const [ciRes, conRes] = await Promise.all([
-      supabase
+      getSupabase()
         .from("check_ins")
         .select("date, touchpoint, status, mood, concerns, medicine_taken, ai_extraction")
         .eq("parent_id", parent_id)
         .gte("date", since)
         .lte("date", today)
         .order("date", { ascending: true }),
-      supabase
+      getSupabase()
         .from("concern_log")
         .select("concern_text, frequency, severity, last_seen")
         .eq("parent_id", parent_id)
