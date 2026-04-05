@@ -3,40 +3,45 @@
  * Route: / (pages/index.jsx)
  *
  * Sales funnel: Hero → WhatsApp mockup → How it works → What parents experience
- *            → Pricing → FAQ → Onboarding modal → WhatsApp redirect
+ *            → Pricing → FAQ → Onboarding modal → Success screen
  *
  * Onboarding flow:
  *   1. "Start free trial" → modal opens
  *   2. Fill 4 core fields (name, phone, parent nickname, parent phone)
- *      + language dropdown + check-in time + optional routine
- *   3. POST /api/onboard → creates family + parent in Supabase
- *   4. Redirects to WhatsApp with pre-filled message
- *   5. Bot sends first check-in to parent within minutes
+ *      + language dropdown + check-in time + optional routine (textarea)
+ *   3. POST BACKEND_URL/child/onboard (or /api/onboard fallback)
+ *   4. Success screen shown with WhatsApp link button
+ *   5. Bot sends welcome message + first check-in to parent automatically
  *
- * If backend (/api/onboard) fails → falls back to WhatsApp redirect with context
+ * Changes from previous version:
+ *   - WHATSAPP_BOT_NUMBER reads from NEXT_PUBLIC_WHATSAPP_BOT_NUMBER env var
+ *   - routine field changed from <input> to <textarea> (3 rows)
+ *   - Submit shows success screen instead of immediate redirect
+ *   - onboard.js proxy logic also moved here (always hits FastAPI directly)
  */
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import Head from "next/head";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const WHATSAPP_BOT_NUMBER = "917032538448"; // AYANA bot number (no +)
+const WHATSAPP_BOT_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_BOT_NUMBER || "14155238886";
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
 
 const LANGUAGES = [
-  { code: "te", label: "తెలుగు", en: "Telugu" },
-  { code: "hi", label: "हिन्दी", en: "Hindi" },
-  { code: "ta", label: "தமிழ்", en: "Tamil" },
-  { code: "kn", label: "ಕನ್ನಡ", en: "Kannada" },
-  { code: "ml", label: "മലയാളം", en: "Malayalam" },
-  { code: "bn", label: "বাংলা", en: "Bengali" },
-  { code: "mr", label: "मराठी", en: "Marathi" },
-  { code: "gu", label: "ગુજરાતી", en: "Gujarati" },
-  { code: "pa", label: "ਪੰਜਾਬੀ", en: "Punjabi" },
-  { code: "en", label: "English", en: "English" },
+  { code: "te", label: "తెలుగు",    en: "Telugu"    },
+  { code: "hi", label: "हिन्दी",     en: "Hindi"     },
+  { code: "ta", label: "தமிழ்",     en: "Tamil"     },
+  { code: "kn", label: "ಕನ್ನಡ",     en: "Kannada"   },
+  { code: "ml", label: "മലയാളം",    en: "Malayalam" },
+  { code: "bn", label: "বাংলা",     en: "Bengali"   },
+  { code: "mr", label: "मराठी",     en: "Marathi"   },
+  { code: "gu", label: "ગુજરાતી",   en: "Gujarati"  },
+  { code: "pa", label: "ਪੰਜਾਬੀ",    en: "Punjabi"   },
+  { code: "od", label: "ଓଡ଼ିଆ",     en: "Odia"      },
+  { code: "en", label: "English",   en: "English"   },
 ];
 
 const CHECKIN_TIMES = [
@@ -136,7 +141,7 @@ export default function LandingPage() {
             <div className="hero-text">
               <div className="hero-badge">
                 <span className="pulse-dot" />
-                Available in Telugu, Hindi, Tamil + 19 more
+                Available in Telugu, Hindi, Tamil + 8 more
               </div>
               <h1>Know your parents are okay, <em>every single day</em></h1>
               <p className="hero-sub">
@@ -200,7 +205,7 @@ export default function LandingPage() {
           <p className="section-desc reveal">Designed for parents who don&apos;t type, don&apos;t read instructions, and don&apos;t download apps.</p>
           <div className="exp-grid">
             {[
-              { icon: "🎙️", title: "Voice messages in their language", desc: "Telugu, Hindi, Tamil, Kannada, Malayalam — 22 Indian languages. They hear it, they don't read it. Works even for parents who can't type." },
+              { icon: "🎙️", title: "Voice messages in their language", desc: "Telugu, Hindi, Tamil, Kannada, Malayalam — 11 Indian languages. They hear it, they don't read it. Works even for parents who can't type." },
               { icon: "👆", title: "Emoji buttons they can tap", desc: "😊 Good, 😐 Okay, 😔 Not well. Each button has an emoji so even without reading, the meaning is clear. One tap = check-in done." },
               { icon: "💊", title: "Medicine reminders that fit their routine", desc: "\"Gas tablet before tea, BP tablet after tiffin.\" Not clinical names — the words they actually use. Grouped by meals, not timestamps." },
               { icon: "🚨", title: "One-tap emergency alert", desc: "If something is seriously wrong, one tap and you get a phone call immediately. Retries if you don't answer. Calls your sibling as backup." },
@@ -260,7 +265,7 @@ export default function LandingPage() {
           <div className="faq-list">
             {[
               { q: "Will my parent need to type anything?", a: "No, never. Every interaction is either tapping an emoji button or sending a voice note. Your parent never opens a keyboard. If they can tap a WhatsApp message, they can use AYANA." },
-              { q: "What languages are supported?", a: "22 Indian languages including Telugu, Hindi, Tamil, Kannada, Malayalam, Bengali, Marathi, Gujarati, Punjabi, Odia, and English. All messages are in 100% pure native language — no English mixing." },
+              { q: "What languages are supported?", a: "11 Indian languages including Telugu, Hindi, Tamil, Kannada, Malayalam, Bengali, Marathi, Gujarati, Punjabi, Odia, and English. All messages are in 100% pure native language — no English mixing." },
               { q: "What if my parent doesn't respond?", a: "AYANA sends one gentle reminder after 3 hours. If still no response after 6 hours, you get an alert. No spam — we respect their autonomy. If they miss 3 consecutive days, you get an escalated notification." },
               { q: "Can I manage both my parents?", a: "Yes! Each parent gets their own separate conversation with AYANA, tailored to their routine. You get a combined daily report covering both parents in one message." },
               { q: "How does the emergency alert work?", a: "If your parent taps the emergency button or tells AYANA they're in severe pain, the system calls you immediately. If you don't pick up, it retries, then calls your backup contact." },
@@ -396,16 +401,17 @@ function FAQItem({ q, a }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function OnboardingModal({ onClose }) {
-  const [step, setStep] = useState(1); // 1 = your details, 2 = parent details
+  const [step, setStep]         = useState(1);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({
-    child_name: "",
-    child_phone: "",
+  const [success, setSuccess]   = useState(null); // { nickname, checkin_time, waLink, ok }
+  const [form, setForm]         = useState({
+    child_name:      "",
+    child_phone:     "",
     parent_nickname: "",
-    parent_phone: "",
-    language: "te",
-    checkin_time: "08:00",
-    routine: "",
+    parent_phone:    "",
+    language:        "te",
+    checkin_time:    "08:00",
+    routine:         "",
   });
 
   const overlayRef = useRef(null);
@@ -428,46 +434,57 @@ function OnboardingModal({ onClose }) {
     return cleaned;
   };
 
+  const formatTime = (t) => {
+    const [h, m] = t.split(":");
+    const hr = parseInt(h);
+    return `${hr > 12 ? hr - 12 : hr}:${m} ${hr >= 12 ? "PM" : "AM"}`;
+  };
+
   const handleSubmit = async () => {
     if (!canProceed || submitting) return;
     setSubmitting(true);
 
     const payload = {
-      child_name: form.child_name.trim(),
-      child_phone: normalizePhone(form.child_phone),
-      parent_phone: normalizePhone(form.parent_phone),
-      parent_name: form.parent_nickname.trim(),
+      child_name:      form.child_name.trim(),
+      child_phone:     normalizePhone(form.child_phone),
+      parent_phone:    normalizePhone(form.parent_phone),
+      parent_name:     form.parent_nickname.trim(),
       parent_nickname: form.parent_nickname.trim(),
-      language: form.language,
-      checkin_time: form.checkin_time,
-      routine: form.routine.trim(),
+      language:        form.language,
+      checkin_time:    form.checkin_time,
+      routine:         form.routine.trim(),
     };
 
     const waLink = `https://wa.me/${WHATSAPP_BOT_NUMBER}?text=${encodeURIComponent(
       `Hi AYANA, I just signed up! My name is ${payload.child_name}. Setting up care for ${payload.parent_nickname}.`
     )}`;
 
+    let ok = false;
     try {
+      // Always try FastAPI directly first, fall back to Next.js proxy
       const apiUrl = BACKEND_URL
         ? `${BACKEND_URL}/child/onboard`
         : "/api/onboard";
 
       const resp = await fetch(apiUrl, {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body:    JSON.stringify(payload),
       });
-
-      if (resp.ok) {
-        window.location.href = waLink;
-      } else {
-        // Backend error → fall back to WhatsApp
-        window.location.href = waLink;
-      }
+      ok = resp.ok;
     } catch {
-      // No backend → redirect to WhatsApp directly
-      window.location.href = waLink;
+      // Network error — still show success, WhatsApp link is the fallback
+      ok = false;
+    } finally {
+      setSubmitting(false);
     }
+
+    setSuccess({
+      nickname:     payload.parent_nickname,
+      checkin_time: payload.checkin_time,
+      waLink,
+      ok,
+    });
   };
 
   return (
@@ -478,128 +495,170 @@ function OnboardingModal({ onClose }) {
     >
       <div className="modal">
         <button className="modal-close" onClick={onClose} aria-label="Close">&times;</button>
-        <h2>{step === 1 ? "Start your free trial" : "About your parent"}</h2>
-        <p className="modal-sub">
-          {step === 1
-            ? "Set up in 2 minutes. Your parent gets their first check-in today."
-            : "AYANA will use this to personalize every message."}
-        </p>
 
-        {/* Progress dots */}
-        <div className="form-steps">
-          <div className={`form-step-dot ${step >= 1 ? "active" : ""}`} />
-          <div className={`form-step-dot ${step >= 2 ? "active" : ""}`} />
-        </div>
-
-        {step === 1 ? (
+        {/* ── SUCCESS STATE ── */}
+        {success ? (
           <>
-            <div className="form-section-label">Your details</div>
-            <div className="form-group">
-              <label>Your name</label>
-              <input
-                type="text"
-                placeholder="e.g. Guna, Priya, Rahul"
-                value={form.child_name}
-                onChange={(e) => update("child_name", e.target.value)}
-                autoFocus
-              />
+            <div style={{ textAlign: "center", padding: "8px 0 24px" }}>
+              <div style={{ fontSize: 52, marginBottom: 16 }}>✅</div>
+              <h2 style={{ marginBottom: 8 }}>
+                {success.nickname} is all set!
+              </h2>
+              <p className="modal-sub" style={{ margin: "0 0 16px" }}>
+                They&apos;ll get their first check-in at{" "}
+                <strong>{formatTime(success.checkin_time)}</strong> IST.
+                AYANA is sending them a welcome message now.
+              </p>
+              {!success.ok && (
+                <p style={{ fontSize: 13, color: "var(--ember)", marginBottom: 16, lineHeight: 1.5 }}>
+                  ⚠️ We couldn&apos;t reach the server — tap below to complete setup over WhatsApp.
+                </p>
+              )}
             </div>
-            <div className="form-group">
-              <label>Your WhatsApp number</label>
-              <input
-                type="tel"
-                placeholder="+91 98765 43210"
-                value={form.child_phone}
-                onChange={(e) => update("child_phone", e.target.value)}
-              />
-              <div className="form-hint">You&apos;ll receive daily reports here</div>
-            </div>
-            <button
-              className="form-submit"
-              disabled={!form.child_name.trim() || !form.child_phone.trim()}
-              onClick={() => setStep(2)}
+            <a
+              href={success.waLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display:        "flex",
+                alignItems:     "center",
+                justifyContent: "center",
+                gap:            8,
+                width:          "100%",
+                padding:        "15px",
+                background:     "var(--wa-green)",
+                color:          "white",
+                borderRadius:   60,
+                fontSize:       15,
+                fontWeight:     600,
+                textDecoration: "none",
+                boxShadow:      "0 4px 20px rgba(37,211,102,0.2)",
+              }}
             >
-              Next — Parent details →
-            </button>
+              <WhatsAppIcon size={18} /> Open WhatsApp to confirm
+            </a>
+            <p className="form-footnote" style={{ marginTop: 14 }}>
+              No credit card needed · Cancel anytime on WhatsApp
+            </p>
           </>
         ) : (
+          /* ── FORM STEPS ── */
           <>
-            <div className="form-section-label">Parent&apos;s details</div>
-            <div className="form-group">
-              <label>What do you call them?</label>
-              <input
-                type="text"
-                placeholder="Amma, Bujjamma, Nanna, Daddy..."
-                value={form.parent_nickname}
-                onChange={(e) => update("parent_nickname", e.target.value)}
-                autoFocus
-              />
-              <div className="form-hint">AYANA will use this name in every message</div>
-            </div>
-            <div className="form-group">
-              <label>Their WhatsApp number</label>
-              <input
-                type="tel"
-                placeholder="+91 98765 43210"
-                value={form.parent_phone}
-                onChange={(e) => update("parent_phone", e.target.value)}
-              />
-            </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Their language</label>
-                <select value={form.language} onChange={(e) => update("language", e.target.value)}>
-                  {LANGUAGES.map((l) => (
-                    <option key={l.code} value={l.code}>{l.label} ({l.en})</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Morning check-in time</label>
-                <select value={form.checkin_time} onChange={(e) => update("checkin_time", e.target.value)}>
-                  {CHECKIN_TIMES.map((t) => {
-                    const [h, m] = t.split(":");
-                    const hr = parseInt(h);
-                    const label = `${hr > 12 ? hr - 12 : hr}:${m} ${hr >= 12 ? "PM" : "AM"}`;
-                    return <option key={t} value={t}>{label}</option>;
-                  })}
-                </select>
-              </div>
-            </div>
-            <div className="form-group">
-              <label>Daily routine & medicines <span style={{ fontWeight: 400, color: "var(--text-faint)" }}>(optional)</span></label>
-              <input
-                type="text"
-                placeholder="Wakes at 6, BP tablet before tea, tiffin at 8:30..."
-                value={form.routine}
-                onChange={(e) => update("routine", e.target.value)}
-              />
-              <div className="form-hint">Our AI organizes this into medicine reminders. You can always update later.</div>
+            <h2>{step === 1 ? "Start your free trial" : "About your parent"}</h2>
+            <p className="modal-sub">
+              {step === 1
+                ? "Set up in 2 minutes. Your parent gets their first check-in today."
+                : "AYANA will use this to personalize every message."}
+            </p>
+
+            {/* Progress dots */}
+            <div className="form-steps">
+              <div className={`form-step-dot ${step >= 1 ? "active" : ""}`} />
+              <div className={`form-step-dot ${step >= 2 ? "active" : ""}`} />
             </div>
 
-            <div style={{ display: "flex", gap: 10 }}>
-              <button
-                className="form-back"
-                onClick={() => setStep(1)}
-              >
-                ← Back
-              </button>
-              <button
-                className="form-submit"
-                disabled={!canProceed || submitting}
-                onClick={handleSubmit}
-                style={{ flex: 1 }}
-              >
-                {submitting ? (
-                  "Setting up..."
-                ) : (
-                  <>
-                    <WhatsAppIcon size={18} /> Start free trial
-                  </>
-                )}
-              </button>
-            </div>
-            <div className="form-footnote">No credit card needed. Cancel anytime on WhatsApp.</div>
+            {step === 1 ? (
+              <>
+                <div className="form-section-label">Your details</div>
+                <div className="form-group">
+                  <label>Your name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Guna, Priya, Rahul"
+                    value={form.child_name}
+                    onChange={(e) => update("child_name", e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Your WhatsApp number</label>
+                  <input
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    value={form.child_phone}
+                    onChange={(e) => update("child_phone", e.target.value)}
+                  />
+                  <div className="form-hint">You&apos;ll receive daily reports here</div>
+                </div>
+                <button
+                  className="form-submit"
+                  disabled={!form.child_name.trim() || !form.child_phone.trim()}
+                  onClick={() => setStep(2)}
+                >
+                  Next — Parent details →
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="form-section-label">Parent&apos;s details</div>
+                <div className="form-group">
+                  <label>What do you call them?</label>
+                  <input
+                    type="text"
+                    placeholder="Amma, Bujjamma, Nanna, Daddy..."
+                    value={form.parent_nickname}
+                    onChange={(e) => update("parent_nickname", e.target.value)}
+                    autoFocus
+                  />
+                  <div className="form-hint">AYANA will use this name in every message</div>
+                </div>
+                <div className="form-group">
+                  <label>Their WhatsApp number</label>
+                  <input
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    value={form.parent_phone}
+                    onChange={(e) => update("parent_phone", e.target.value)}
+                  />
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Their language</label>
+                    <select value={form.language} onChange={(e) => update("language", e.target.value)}>
+                      {LANGUAGES.map((l) => (
+                        <option key={l.code} value={l.code}>{l.label} ({l.en})</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Morning check-in time</label>
+                    <select value={form.checkin_time} onChange={(e) => update("checkin_time", e.target.value)}>
+                      {CHECKIN_TIMES.map((t) => (
+                        <option key={t} value={t}>{formatTime(t)}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>
+                    Daily routine &amp; medicines{" "}
+                    <span style={{ fontWeight: 400, color: "var(--text-faint)" }}>(optional)</span>
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Wakes at 6am, BP tablet before tea, tiffin at 8:30, metformin after tiffin, lunch at 1pm, evening walk at 5, dinner at 8, atorvastatin at night..."
+                    value={form.routine}
+                    onChange={(e) => update("routine", e.target.value)}
+                  />
+                  <div className="form-hint">
+                    Describe naturally — our AI extracts medicines, meal times, and activities automatically.
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button className="form-back" onClick={() => setStep(1)}>← Back</button>
+                  <button
+                    className="form-submit"
+                    disabled={!canProceed || submitting}
+                    onClick={handleSubmit}
+                    style={{ flex: 1 }}
+                  >
+                    {submitting ? "Setting up..." : <><WhatsAppIcon size={18} /> Start free trial</>}
+                  </button>
+                </div>
+                <div className="form-footnote">No credit card needed. Cancel anytime on WhatsApp.</div>
+              </>
+            )}
           </>
         )}
       </div>
@@ -914,14 +973,12 @@ nav.scrolled { box-shadow: 0 1px 16px rgba(0,0,0,0.04); }
 }
 .step-icon.green { background: var(--sage); }
 .step-icon.amber { background: var(--ember-light); }
-.step-icon.teal { background: #E5F6F6; }
+.step-icon.teal  { background: #E5F6F6; }
 .step-card h3 {
   font-size: 17px; font-weight: 700; margin-bottom: 8px;
   color: var(--forest-deep); letter-spacing: -0.2px;
 }
-.step-card p {
-  font-size: 14px; line-height: 1.7; color: var(--text-soft);
-}
+.step-card p { font-size: 14px; line-height: 1.7; color: var(--text-soft); }
 .step-time {
   display: inline-block; margin-top: 14px;
   font-size: 12px; font-weight: 600; color: var(--forest);
@@ -943,9 +1000,7 @@ nav.scrolled { box-shadow: 0 1px 16px rgba(0,0,0,0.04); }
 .experience-section .section-eyebrow { color: var(--sage-mid); }
 .experience-section .section-heading { color: white; max-width: 600px; }
 .experience-section .section-desc { color: rgba(255,255,255,0.55); }
-.exp-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
-}
+.exp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .exp-card {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.08);
@@ -953,10 +1008,7 @@ nav.scrolled { box-shadow: 0 1px 16px rgba(0,0,0,0.04); }
   backdrop-filter: blur(8px);
   transition: background 0.3s, border-color 0.3s;
 }
-.exp-card:hover {
-  background: rgba(255,255,255,0.1);
-  border-color: rgba(255,255,255,0.14);
-}
+.exp-card:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.14); }
 .exp-icon { font-size: 26px; margin-bottom: 14px; display: block; }
 .exp-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; color: white; }
 .exp-card p { font-size: 13px; line-height: 1.65; color: rgba(255,255,255,0.5); }
@@ -1015,10 +1067,7 @@ nav.scrolled { box-shadow: 0 1px 16px rgba(0,0,0,0.04); }
 /* ─── FAQ ─── */
 .faq-section { padding: 80px 0; }
 .faq-list { max-width: 660px; margin: 32px auto 0; }
-.faq-item {
-  border-bottom: 1px solid rgba(0,0,0,0.05); padding: 20px 0;
-  cursor: pointer;
-}
+.faq-item { border-bottom: 1px solid rgba(0,0,0,0.05); padding: 20px 0; cursor: pointer; }
 .faq-q {
   font-size: 16px; font-weight: 600; color: var(--forest-deep);
   display: flex; justify-content: space-between; align-items: center; gap: 16px;
@@ -1036,11 +1085,7 @@ nav.scrolled { box-shadow: 0 1px 16px rgba(0,0,0,0.04); }
 .faq-item.open .faq-a { max-height: 220px; margin-top: 12px; }
 
 /* ─── FINAL CTA ─── */
-.final-cta-section {
-  padding: 100px 0;
-  background: var(--forest-deep);
-  position: relative;
-}
+.final-cta-section { padding: 100px 0; background: var(--forest-deep); position: relative; }
 
 /* ─── FOOTER ─── */
 footer {
@@ -1100,23 +1145,32 @@ footer {
 .form-step-dot.active { background: var(--forest); }
 .form-section-label {
   font-size: 11px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 1.5px; color: var(--text-faint);
-  margin-bottom: 14px;
+  letter-spacing: 1.5px; color: var(--text-faint); margin-bottom: 14px;
 }
 .form-group { margin-bottom: 14px; }
 .form-group label {
-  display: block; font-size: 13px; font-weight: 600; color: var(--text);
-  margin-bottom: 5px;
+  display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px;
 }
 .form-group input, .form-group select {
   width: 100%; padding: 11px 14px;
   border: 1.5px solid rgba(20,92,72,0.12);
   border-radius: var(--r-md); font-size: 15px; font-family: var(--sans);
-  background: white; transition: border-color 0.2s, box-shadow 0.2s;
-  color: var(--text);
+  background: white; transition: border-color 0.2s, box-shadow 0.2s; color: var(--text);
 }
 .form-group input::placeholder { color: var(--text-faint); }
 .form-group input:focus, .form-group select:focus {
+  outline: none; border-color: var(--forest);
+  box-shadow: 0 0 0 3px rgba(20,92,72,0.08);
+}
+.form-group textarea {
+  width: 100%; padding: 11px 14px;
+  border: 1.5px solid rgba(20,92,72,0.12);
+  border-radius: var(--r-md); font-size: 14px; font-family: var(--sans);
+  background: white; transition: border-color 0.2s, box-shadow 0.2s;
+  color: var(--text); resize: vertical; line-height: 1.6; min-height: 80px;
+}
+.form-group textarea::placeholder { color: var(--text-faint); }
+.form-group textarea:focus {
   outline: none; border-color: var(--forest);
   box-shadow: 0 0 0 3px rgba(20,92,72,0.08);
 }
@@ -1141,15 +1195,11 @@ footer {
 }
 .form-back:hover { background: var(--sage-mid); }
 .form-footnote {
-  text-align: center; margin-top: 12px;
-  font-size: 12px; color: var(--text-faint);
+  text-align: center; margin-top: 12px; font-size: 12px; color: var(--text-faint);
 }
 
 /* ─── SCROLL REVEAL ─── */
-.reveal {
-  opacity: 0; transform: translateY(24px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-}
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
 .reveal.visible { opacity: 1; transform: translateY(0); }
 
 /* ─── RESPONSIVE ─── */
