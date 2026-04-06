@@ -1,0 +1,200 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 43, 26, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal {
+  background: var(--white);
+  border-radius: 24px;
+  width: calc(100% - 2rem);   /* prevents overflow on small screens */
+  max-width: 560px;
+  max-height: 92vh;
+  overflow-y: auto;
+  position: relative;
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #F2F0EA;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  transition: background 0.2s;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.close:hover {
+  background: var(--border);
+}
+
+/* ── Stepper ── */
+.stepper {
+  display: flex;
+  align-items: center;
+  padding: 1.4rem 1.6rem 0;
+  gap: 0;
+  /* leave room for the close button */
+  padding-right: 3.2rem;
+}
+
+.stepItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.stepItem:last-child {
+  flex: 0;
+}
+
+.circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.done {
+  background: var(--green);
+  color: #fff;
+}
+
+.active {
+  background: var(--dark);
+  color: #fff;
+}
+
+.inactive {
+  background: #F2F0EA;
+  color: var(--muted);
+  border: 1.5px solid var(--border);
+}
+
+.stepLabel {
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.labelDone     { color: var(--green); }
+.labelActive   { color: var(--dark);  }
+.labelInactive { color: var(--muted); }
+
+.line {
+  flex: 1;
+  height: 1.5px;
+  background: var(--border);
+  margin: 0 3px;
+  transition: background 0.3s;
+  min-width: 6px;
+}
+
+.lineDone {
+  background: var(--green);
+}
+
+/* ── Success ── */
+.success {
+  padding: 3rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.successIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--green-pale);
+  color: var(--green);
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.successTitle {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.successDesc {
+  font-size: 0.95rem;
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 380px;
+}
+
+.successBtn {
+  margin-top: 0.5rem;
+  padding: 0.85rem 2rem;
+  background: var(--green);
+  border: none;
+  border-radius: 50px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: background 0.2s;
+}
+
+.successBtn:hover {
+  background: var(--green-hover);
+}
+
+/* ── Mobile ── */
+@media (max-width: 480px) {
+  .stepper {
+    padding: 1.2rem 1.2rem 0;
+    padding-right: 3rem;
+  }
+  .stepLabel {
+    display: none;   /* hide text labels on very small screens, circles remain */
+  }
+  .modal {
+    border-radius: 20px;
+  }
+}

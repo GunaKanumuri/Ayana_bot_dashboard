@@ -1,0 +1,42 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --cream: #F7F4EE;
+  --dark: #1C2B1A;
+  --green: #2D6A4F;
+  --green-hover: #236B40;
+  --green-light: #52B788;
+  --green-pale: #D8F3DC;
+  --orange: #E07A45;
+  --text: #2C3E2D;
+  --muted: #6B7C6C;
+  --border: #D4DDD5;
+  --white: #FFFFFF;
+  --emergency-bg: #FFF7F0;
+  --emergency-border: #F5CBA7;
+  --emergency-title: #8B4513;
+  --emergency-sub: #A0522D;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--cream);
+  color: var(--text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }

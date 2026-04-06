@@ -1,0 +1,186 @@
+.hint {
+  font-size: 0.82rem;
+  color: var(--muted);
+  background: var(--green-pale);
+  border-radius: 10px;
+  padding: 0.65rem 0.9rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.recBadge {
+  display: inline-block;
+  background: var(--green);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 50px;
+  margin-right: 4px;
+}
+
+/* 2-column grid */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Individual slot card */
+.slot {
+  border-radius: 12px;
+  padding: 0.7rem 0.75rem;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  transition: all 0.18s;
+}
+
+.slot.on {
+  border-color: var(--green);
+  background: var(--green-pale);
+}
+
+.slot.off {
+  opacity: 0.55;
+}
+
+/* Top row inside each slot */
+.slotTop {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.slotEmoji {
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.slotLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── FIX: spacing before rec pill so it doesn't stick to label ── */
+.recPill {
+  margin-left: 2px;
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--green);
+  background: #fff;
+  border: 1px solid var(--green);
+  padding: 1px 5px;
+  border-radius: 50px;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
+/* Custom checkbox */
+.toggleWrap {
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.toggleWrap input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.checkBox {
+  display: inline-block;
+  width: 17px;
+  height: 17px;
+  border-radius: 5px;
+  border: 2px solid var(--border);
+  background: #fff;
+  transition: all 0.18s;
+  position: relative;
+}
+
+.toggleWrap input:checked + .checkBox {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.toggleWrap input:checked + .checkBox::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0px;
+  width: 5px;
+  height: 9px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+/* Time picker row */
+.timePicker {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 0.5rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.timeSelect {
+  flex: 1;
+  padding: 4px 2px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-family: var(--font-sans);
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+  outline: none;
+  min-width: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  text-align: center;
+}
+
+.timeSelect:focus {
+  border-color: var(--green);
+}
+
+.colon {
+  font-weight: 700;
+  color: var(--muted);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.preview {
+  font-size: 0.7rem;
+  color: var(--green);
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Mobile: single column */
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .slotLabel {
+    white-space: normal;
+  }
+}
