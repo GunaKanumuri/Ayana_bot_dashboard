@@ -185,6 +185,27 @@
   background: var(--green-hover);
 }
 
+.successClose {
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  text-decoration: underline;
+  padding: 0;
+}
+
+.successClose:hover {
+  color: var(--dark);
+}
+
+.successNote {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: center;
+}
+
 /* ── Mobile ── */
 @media (max-width: 480px) {
   .stepper {
