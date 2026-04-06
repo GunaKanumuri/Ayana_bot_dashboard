@@ -47,12 +47,12 @@ export async function POST(req: NextRequest) {
       afternoon: 'Afternoon', evening: 'Evening',
       night: 'Night', goodnight: 'Goodnight',
     }
-    function fmt12(h: string, m: string) {
-      const hr = parseInt(h)
-      const ampm = hr >= 12 ? 'PM' : 'AM'
-      const disp = hr === 0 ? 12 : hr > 12 ? hr - 12 : hr
-      return `${disp}:${m} ${ampm}`
-    }
+    const fmt12 = (h: string, m: string) => {
+    const hr = parseInt(h)
+    const ampm = hr >= 12 ? 'PM' : 'AM'
+    const disp = hr === 0 ? 12 : hr > 12 ? hr - 12 : hr
+    return `${disp}:${m} ${ampm}`
+  }
     const scheduleSummary = schedule
       ? Object.entries(schedule as Record<string, SlotConfig>)
           .filter(([, s]) => s.enabled)
